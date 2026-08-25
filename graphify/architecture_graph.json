@@ -1,0 +1,68 @@
+{
+  "project": "Workplace SafetyWatch",
+  "version": "1.0.0",
+  "nodes": [
+    { "id": "FE_App", "type": "Frontend", "label": "Next.js App Router (app/page.tsx)", "layer": "UI" },
+    { "id": "FE_Employee", "type": "Frontend Component", "label": "EmployeeReportView", "layer": "UI" },
+    { "id": "FE_Manager", "type": "Frontend Component", "label": "ManagerDashboardView", "layer": "UI" },
+    { "id": "FE_Stats", "type": "Frontend Component", "label": "StatsOverview", "layer": "UI" },
+    { "id": "FE_Timeline", "type": "Frontend Component", "label": "LiveAgentTimeline", "layer": "UI" },
+    { "id": "FE_Confidence", "type": "Frontend Component", "label": "ConfidenceMetricsCard", "layer": "UI" },
+    { "id": "FE_API_Client", "type": "Frontend Service", "label": "lib/api.ts (REST Client)", "layer": "Client-API" },
+    
+    { "id": "BE_FastAPI", "type": "Backend Core", "label": "FastAPI App (app/main.py)", "layer": "API Server" },
+    { "id": "BE_Router_Incidents", "type": "API Router", "label": "api/incidents.py", "layer": "API Server" },
+    { "id": "BE_Router_Dashboard", "type": "API Router", "label": "api/dashboard.py", "layer": "API Server" },
+    { "id": "BE_Schemas", "type": "Data Validation", "label": "schemas/incident.py (Pydantic)", "layer": "Models" },
+    
+    { "id": "LG_Workflow", "type": "Orchestrator", "label": "LangGraph StateGraph (workflow.py)", "layer": "Orchestration" },
+    { "id": "LG_State", "type": "State Store", "label": "SafetyWatchState (state.py)", "layer": "Orchestration" },
+    
+    { "id": "AG_Detection", "type": "Agent Node", "label": "1. Hazard Detection Agent", "layer": "Agents" },
+    { "id": "AG_Classification", "type": "Agent Node", "label": "2. Hazard Classification Agent", "layer": "Agents" },
+    { "id": "AG_Risk", "type": "Agent Node", "label": "3. Risk Assessment Agent", "layer": "Agents" },
+    { "id": "AG_Rules", "type": "Agent Node", "label": "4. Safety Rule & Compliance Agent", "layer": "Agents" },
+    { "id": "AG_Report", "type": "Agent Node", "label": "5. Incident Report Agent", "layer": "Agents" },
+    { "id": "AG_Notification", "type": "Agent Node", "label": "6. Notification Agent", "layer": "Agents" },
+    { "id": "AG_Resolution", "type": "Agent Node", "label": "7. Resolution Tracking Agent", "layer": "Agents" },
+    
+    { "id": "SRV_Groq", "type": "LLM Service", "label": "Groq LLM / Vision (groq_service.py)", "layer": "External AI" },
+    { "id": "SRV_Store", "type": "Persistence", "label": "DataStore (store.py)", "layer": "Database" },
+    { "id": "SRV_Supabase", "type": "External DB", "label": "Supabase Postgres & Storage (supabase_client.py)", "layer": "Database" },
+    { "id": "OBS_LangSmith", "type": "Observability", "label": "LangSmith Tracing Engine", "layer": "Observability" }
+  ],
+  "edges": [
+    { "from": "FE_App", "to": "FE_Employee", "relationship": "renders" },
+    { "from": "FE_App", "to": "FE_Manager", "relationship": "renders" },
+    { "from": "FE_App", "to": "FE_Stats", "relationship": "renders" },
+    { "from": "FE_Employee", "to": "FE_Timeline", "relationship": "renders live progress" },
+    { "from": "FE_Employee", "to": "FE_Confidence", "relationship": "renders metrics" },
+    { "from": "FE_Employee", "to": "FE_API_Client", "relationship": "submits analysis" },
+    { "from": "FE_Manager", "to": "FE_API_Client", "relationship": "queries & updates" },
+    { "from": "FE_Stats", "to": "FE_API_Client", "relationship": "fetches metrics" },
+    
+    { "from": "FE_API_Client", "to": "BE_FastAPI", "relationship": "HTTP REST (CORS)" },
+    { "from": "BE_FastAPI", "to": "BE_Router_Incidents", "relationship": "routes /api/incidents" },
+    { "from": "BE_FastAPI", "to": "BE_Router_Dashboard", "relationship": "routes /api/dashboard" },
+    { "from": "BE_Router_Incidents", "to": "LG_Workflow", "relationship": "invokes pipeline" },
+    { "from": "BE_Router_Incidents", "to": "SRV_Store", "relationship": "reads/writes incidents" },
+    { "from": "BE_Router_Dashboard", "to": "SRV_Store", "relationship": "aggregates stats" },
+    
+    { "from": "LG_Workflow", "to": "LG_State", "relationship": "manages shared state" },
+    { "from": "LG_Workflow", "to": "AG_Detection", "relationship": "step 1" },
+    { "from": "AG_Detection", "to": "AG_Classification", "relationship": "conditional branch (hazard=true)" },
+    { "from": "AG_Classification", "to": "AG_Risk", "relationship": "step 3" },
+    { "from": "AG_Risk", "to": "AG_Rules", "relationship": "step 4" },
+    { "from": "AG_Rules", "to": "AG_Report", "relationship": "step 5" },
+    { "from": "AG_Report", "to": "AG_Notification", "relationship": "step 6" },
+    { "from": "AG_Notification", "to": "AG_Resolution", "relationship": "step 7" },
+    
+    { "from": "AG_Detection", "to": "SRV_Groq", "relationship": "vision inference" },
+    { "from": "AG_Classification", "to": "SRV_Groq", "relationship": "category inference" },
+    { "from": "AG_Risk", "to": "SRV_Groq", "relationship": "rubric calibration" },
+    { "from": "AG_Rules", "to": "SRV_Groq", "relationship": "compliance justification" },
+    
+    { "from": "SRV_Store", "to": "SRV_Supabase", "relationship": "persists rows & images" },
+    { "from": "LG_Workflow", "to": "OBS_LangSmith", "relationship": "emits trace telemetry" }
+  ]
+}

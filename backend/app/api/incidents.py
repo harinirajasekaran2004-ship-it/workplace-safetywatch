@@ -106,10 +106,19 @@ async def analyze_hazard_incident(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
 
-    # Execute LangGraph Multi-Agent Pipeline
+    # Execute LangGraph Multi-Agent Pipeline with LangSmith metadata
     logger.info(f"Invoking SafetyWatch LangGraph for incident {incident_id}")
     try:
-        final_state: SafetyWatchState = safetywatch_graph.invoke(initial_state)
+        run_config = {
+            "run_name": f"SafetyWatch-Pipeline-{incident_id}",
+            "tags": ["workplace-safetywatch", "hazard-detection", "mvp"],
+            "metadata": {
+                "incident_id": incident_id,
+                "location": location,
+                "reporter": reporter or "Employee"
+            }
+        }
+        final_state: SafetyWatchState = safetywatch_graph.invoke(initial_state, config=run_config)
     except Exception as e:
         logger.error(f"LangGraph execution exception: {e}")
         raise HTTPException(
