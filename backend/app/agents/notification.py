@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any
 from app.agents.state import SafetyWatchState
+from app.services.email_service import DEFAULT_MANAGER_EMAIL
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,7 @@ def notification_node(state: SafetyWatchState) -> Dict[str, Any]:
     requires_urgent_notification = severity in ["High", "Critical"] or risk_score >= 60
 
     if requires_urgent_notification:
-        # Construct notification payload
-        recipient_manager = "safety-officer@facility.internal"
+        recipient_manager = DEFAULT_MANAGER_EMAIL
         subject = f"[CRITICAL SAFETY ALERT] {severity.upper()} Hazard Detected: {incident_code} at {location}"
         message = (
             f"URGENT ATTENTION REQUIRED:\n"
@@ -40,7 +40,6 @@ def notification_node(state: SafetyWatchState) -> Dict[str, Any]:
             f"Recommended Action: Immediate physical area inspection & mitigation."
         )
 
-        # In production without an active SMTP/Twilio gateway, status is explicitly SIMULATED
         notification_status = "simulated"
         sent_at = datetime.now(timezone.utc).isoformat()
 
@@ -52,7 +51,7 @@ def notification_node(state: SafetyWatchState) -> Dict[str, Any]:
             "subject": subject,
             "message": message
         }
-        logger.info(f"Manager notification generated ({notification_status}) for incident {incident_code}")
+        logger.info(f"Manager notification generated ({notification_status}) to {recipient_manager} for incident {incident_code}")
     else:
         notification_status = "skipped"
         notification_detail = {

@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timezone
 from typing import Optional, List
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 
 from app.schemas.incident import (
     IncidentCreateResponse,
@@ -22,13 +23,14 @@ from app.agents.workflow import safetywatch_graph
 from app.agents.resolution import apply_manager_resolution_action
 from app.db.store import store
 from app.db.supabase_client import supabase_service
+from app.services.pdf_generator import generate_incident_pdf
+from app.services.email_service import send_incident_notification_email, DEFAULT_MANAGER_EMAIL
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/incidents", tags=["Incidents"])
 
-# Allowed MIME types and max size (10 MB)
 ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 MAX_IMAGE_SIZE = 10 * 1024 * 1024
 
@@ -63,12 +65,10 @@ async def analyze_hazard_incident(
 
         image_base64 = base64.b64encode(file_bytes).decode("utf-8")
         
-        # Try uploading to Supabase Storage if configured
         file_ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
         storage_filename = f"{uuid.uuid4()}.{file_ext}"
         image_url = supabase_service.upload_image(file_bytes, storage_filename, image.content_type)
         
-        # If Supabase storage is not active, save locally or use data URL
         if not image_url:
             os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
             local_path = os.path.join(settings.UPLOAD_DIR, storage_filename)
@@ -126,7 +126,6 @@ async def analyze_hazard_incident(
             detail=f"Safety analysis pipeline failure: {str(e)}"
         )
 
-    # Build and persist Incident Record
     hazard_detected = final_state.get("hazard", True)
     incident_code = final_state.get("incident_code", "WS-1000")
     
@@ -171,7 +170,6 @@ async def analyze_hazard_incident(
         "errors": final_state.get("errors", [])
     }
 
-    # Save to storage
     saved_incident = store.save_incident(incident_record)
 
     return IncidentCreateResponse(
@@ -257,3 +255,49 @@ def get_incident_progress(id: str):
         errors=errors,
         incident=IncidentDetail(**incident)
     )
+
+@router.get("/{id}/pdf")
+def download_incident_pdf(id: str):
+    """
+    Generates and returns an official PDF incident report for download.
+    """
+    incident = store.get_incident(id)
+    if not incident:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Incident with ID '{id}' was not found."
+        )
+
+    pdf_buffer = generate_incident_pdf(incident)
+    incident_code = incident.get("incident_code", "WS-XXXX")
+    filename = f"Incident-Report-{incident_code}.pdf"
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@router.post("/{id}/send-email")
+def trigger_manager_email(id: str, recipient: Optional[str] = Query(None)):
+    """
+    Dispatches a high-priority safety alert email directly to the safety officer.
+    """
+    incident = store.get_incident(id)
+    if not incident:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Incident with ID '{id}' was not found."
+        )
+
+    email_result = send_incident_notification_email(incident, recipient=recipient)
+    notifications = list(incident.get("notifications", []))
+    notifications.append(email_result)
+    incident["notifications"] = notifications
+    store.save_incident(incident)
+
+    return {
+        "success": True,
+        "message": f"Safety notification email dispatched to {email_result['recipient']}.",
+        "notification": email_result
+    }

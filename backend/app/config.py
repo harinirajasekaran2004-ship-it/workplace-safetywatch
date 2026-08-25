@@ -1,7 +1,7 @@
 import os
-from typing import List
+from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, field_validator
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -16,12 +16,21 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     PORT: int = 8000
     HOST: str = "0.0.0.0"
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://workplace-safetywatch.vercel.app",
         "*"
     ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, str)):
+            return v
+        return ["*"]
 
     # Groq LLM
     GROQ_API_KEY: str = Field(default="", description="Groq API key")

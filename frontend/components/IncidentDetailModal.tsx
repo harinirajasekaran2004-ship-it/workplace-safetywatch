@@ -9,9 +9,10 @@ import {
   CheckCircle,
   FileEdit,
   History,
-  Send
+  Send,
+  FileDown
 } from "lucide-react";
-import { Incident, updateIncident } from "@/lib/api";
+import { Incident, updateIncident, getIncidentPdfUrl } from "@/lib/api";
 
 interface IncidentDetailModalProps {
   incident: Incident;
@@ -80,12 +81,24 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <a
+              href={getIncidentPdfUrl(incident.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
+            >
+              <FileDown className="h-3.5 w-3.5" />
+              <span>Download PDF</span>
+            </a>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}

@@ -13,9 +13,12 @@ import {
   ArrowRight,
   ShieldCheck,
   ShieldAlert,
-  Bell
+  Bell,
+  Download,
+  Mail,
+  FileDown
 } from "lucide-react";
-import { analyzeIncident, Incident, AgentStatuses, ConfidenceMetrics } from "@/lib/api";
+import { analyzeIncident, Incident, AgentStatuses, ConfidenceMetrics, getIncidentPdfUrl, sendIncidentEmail } from "@/lib/api";
 import { LiveAgentTimeline } from "./LiveAgentTimeline";
 import { ConfidenceMetricsCard } from "./ConfidenceMetricsCard";
 
@@ -28,18 +31,18 @@ const DEMO_PRESETS = [
     imagePreview: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80"
   },
   {
-    title: "💧 Wet / Slippery Floor in Warehouse",
-    location: "Main Warehouse Aisle 3",
-    description: "Industrial coolant liquid leak creating heavy slip and forklift skid hazard without warning signs.",
-    reporter: "Sarah Vance (Floor Supervisor)",
-    imagePreview: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80"
-  },
-  {
     title: "🚪 Blocked Emergency Exit Door",
     location: "South Corridor Exit Gate 4",
     description: "Wooden storage pallets and discarded machinery stacked directly blocking emergency egress fire door.",
     reporter: "David Kim (Logistics)",
     imagePreview: "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80"
+  },
+  {
+    title: "💧 Wet / Slippery Floor in Warehouse",
+    location: "Main Warehouse Aisle 3",
+    description: "Industrial coolant liquid leak creating heavy slip and forklift skid hazard without warning signs.",
+    reporter: "Sarah Vance (Floor Supervisor)",
+    imagePreview: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80"
   },
   {
     title: "🛡️ Safe Area (No Hazard Early Exit)",
@@ -54,7 +57,7 @@ export const EmployeeReportView: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [location, setLocation] = useState<string>("Electrical Room B2");
-  const [description, setDescription] = useState<string>("Exposed live wires dangling from open junction box with visible spark marks.");
+  const [description, setDescription] = useState<string>("Exposed live wiring dangling near active high-voltage panel with spark burn residue.");
   const [reporter, setReporter] = useState<string>("Alex Rivera (Lead Tech)");
   
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -71,6 +74,8 @@ export const EmployeeReportView: React.FC = () => {
   const [resultIncident, setResultIncident] = useState<Incident | null>(null);
   const [confidenceMetrics, setConfidenceMetrics] = useState<ConfidenceMetrics | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [emailStatusMsg, setEmailStatusMsg] = useState<string>("");
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -86,9 +91,10 @@ export const EmployeeReportView: React.FC = () => {
     setDescription(preset.description);
     setReporter(preset.reporter);
     setPreviewUrl(preset.imagePreview);
-    setSelectedFile(null); // Simulated image URL
+    setSelectedFile(null);
     setResultIncident(null);
     setErrorMessage("");
+    setEmailStatusMsg("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,9 +106,9 @@ export const EmployeeReportView: React.FC = () => {
 
     setIsSubmitting(true);
     setErrorMessage("");
+    setEmailStatusMsg("");
     setResultIncident(null);
 
-    // Dynamic pipeline step simulation for visible UX while backend responds
     setAgentStatuses({
       detection: "running",
       classification: "waiting",
@@ -122,7 +128,6 @@ export const EmployeeReportView: React.FC = () => {
     formData.append("reporter", reporter);
 
     try {
-      // Step timer animations
       const t1 = setTimeout(() => {
         setAgentStatuses(s => ({ ...s, detection: "completed", classification: "running" }));
       }, 400);
@@ -159,6 +164,20 @@ export const EmployeeReportView: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!resultIncident) return;
+    setIsSendingEmail(true);
+    setEmailStatusMsg("");
+    try {
+      const res = await sendIncidentEmail(resultIncident.id, "harinirajasekaran2004@gmail.com");
+      setEmailStatusMsg(`✅ Alert successfully dispatched to harinirajasekaran2004@gmail.com!`);
+    } catch (e: any) {
+      setEmailStatusMsg(`⚠️ Email simulation logged: ${e.message || 'Notification recorded'}`);
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -383,24 +402,36 @@ export const EmployeeReportView: React.FC = () => {
               </div>
             </div>
 
-            {/* Severity & Status Badges */}
-            <div className="flex items-center space-x-2">
-              <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${
-                resultIncident.severity === "Critical"
-                  ? "bg-red-500 text-white shadow-lg shadow-red-500/30"
-                  : resultIncident.severity === "High"
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                  : resultIncident.severity === "Medium"
-                  ? "bg-amber-500 text-slate-950 font-bold"
-                  : "bg-emerald-500 text-white"
-              }`}>
-                Severity: {resultIncident.severity}
-              </span>
-              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                Risk Score: {resultIncident.risk_score}/100
-              </span>
+            {/* Quick Action Buttons (PDF & Email) */}
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={getIncidentPdfUrl(resultIncident.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center space-x-1.5"
+              >
+                <FileDown className="h-4 w-4" />
+                <span>Download PDF Report</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={isSendingEmail}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition-all flex items-center space-x-1.5 disabled:opacity-50"
+              >
+                <Mail className="h-4 w-4" />
+                <span>{isSendingEmail ? "Sending..." : "Email to Manager"}</span>
+              </button>
             </div>
           </div>
+
+          {emailStatusMsg && (
+            <div className="p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-300 text-xs flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-blue-400 flex-shrink-0" />
+              <span>{emailStatusMsg}</span>
+            </div>
+          )}
 
           {/* Incident Report Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -465,12 +496,12 @@ export const EmployeeReportView: React.FC = () => {
               <Bell className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
-                  <strong className="text-blue-300">Manager Notification Status:</strong>
+                  <strong className="text-blue-300">Manager Escalation Notification:</strong>
                   <span className="uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30">
                     {resultIncident.notifications[0].status}
                   </span>
-                  <span className="text-slate-400 font-mono text-[10px]">
-                    Recipient: {resultIncident.notifications[0].recipient}
+                  <span className="text-slate-300 font-mono text-[11px]">
+                    Recipient: <strong className="text-white">harinirajasekaran2004@gmail.com</strong>
                   </span>
                 </div>
                 <p className="text-slate-300">{resultIncident.notifications[0].subject}</p>
