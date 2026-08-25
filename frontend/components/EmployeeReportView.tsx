@@ -420,6 +420,15 @@ export const EmployeeReportView: React.FC = () => {
                 <Mail className="h-4 w-4" />
                 <span>{isSendingEmail ? "Sending..." : "Email to Manager"}</span>
               </button>
+
+              <a
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=harinirajasekaran2004@gmail.com&su=${encodeURIComponent(`[CRITICAL SAFETY ALERT] ${resultIncident.severity} Hazard Detected: ${resultIncident.incident_code} at ${resultIncident.location}`)}&body=${encodeURIComponent(`WORKPLACE SAFETYWATCH ALERT\nIncident Code: ${resultIncident.incident_code}\nSeverity: ${resultIncident.severity} (${resultIncident.risk_score}/100 Risk Score)\nLocation: ${resultIncident.location}\nCategory: ${resultIncident.category}\n\nDescription:\n${resultIncident.description}\n\nRecommended Action:\n${resultIncident.matched_rules?.[0]?.recommended_corrective_action || 'Inspect immediately.'}\n`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all flex items-center space-x-1.5"
+              >
+                <span>Compose in Gmail ↗</span>
+              </a>
             </div>
           </div>
 
