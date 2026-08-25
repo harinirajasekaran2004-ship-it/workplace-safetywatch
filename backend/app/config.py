@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     LANGCHAIN_API_KEY: str = Field(default="", description="LangSmith API key")
     LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
 
+    # Email / SMTP Configuration
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = Field(default="", description="Sender email address e.g. alerts@gmail.com")
+    SMTP_PASSWORD: str = Field(default="", description="16-character Gmail App Password or SMTP password")
+    SMTP_FROM_NAME: str = "Workplace SafetyWatch Alert System"
+
     # Storage paths for local fallback
     UPLOAD_DIR: str = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
     SQLITE_DB_PATH: str = os.path.join(os.path.dirname(__file__), "..", "..", "safetywatch.db")
