@@ -1,20 +1,17 @@
 import React, { useState } from "react";
 import {
   UploadCloud,
-  FileImage,
   MapPin,
   User,
   FileText,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Clock,
   Sparkles,
   ArrowRight,
   ShieldCheck,
   ShieldAlert,
   Bell,
-  Download,
   Mail,
   FileDown
 } from "lucide-react";
@@ -28,14 +25,14 @@ const DEMO_PRESETS = [
     location: "Electrical Room B2",
     description: "Exposed live wiring dangling near active high-voltage breaker panel with visible spark residue.",
     reporter: "Alex Rivera (Lead Technician)",
-    imagePreview: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80"
+    imagePreview: "/test_images/1_exposed_electrical_wires.jpg"
   },
   {
     title: "🚪 Blocked Emergency Exit Door",
     location: "South Corridor Exit Gate 4",
     description: "Wooden storage pallets and discarded machinery stacked directly blocking emergency egress fire door.",
     reporter: "David Kim (Logistics)",
-    imagePreview: "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80"
+    imagePreview: "/test_images/2_blocked_emergency_exit.jpg"
   },
   {
     title: "💧 Wet / Slippery Floor in Warehouse",
@@ -55,7 +52,7 @@ const DEMO_PRESETS = [
 
 export const EmployeeReportView: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState<string>("/test_images/1_exposed_electrical_wires.jpg");
   const [location, setLocation] = useState<string>("Electrical Room B2");
   const [description, setDescription] = useState<string>("Exposed live wiring dangling near active high-voltage panel with spark burn residue.");
   const [reporter, setReporter] = useState<string>("Alex Rivera (Lead Tech)");
@@ -222,18 +219,18 @@ export const EmployeeReportView: React.FC = () => {
       {/* Main Submission Form & Live Pipeline */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Input Form */}
-        <div className="lg:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm">
+        <div className="lg:col-span-6 bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 sm:p-7 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Image Upload Area */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 1. Hazard Photo Upload
               </label>
               <div
                 className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
                   previewUrl
-                    ? "border-emerald-500/50 bg-emerald-500/5"
-                    : "border-slate-300 dark:border-slate-700 hover:border-emerald-500"
+                    ? "border-emerald-500/50 bg-emerald-500/10"
+                    : "border-slate-700 hover:border-emerald-500 bg-slate-950/60"
                 }`}
               >
                 {previewUrl ? (
@@ -244,7 +241,7 @@ export const EmployeeReportView: React.FC = () => {
                       className="max-h-48 mx-auto rounded-xl object-cover shadow-md border border-slate-700"
                     />
                     <div className="flex items-center justify-center space-x-2">
-                      <label className="cursor-pointer text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                      <label className="cursor-pointer text-xs font-semibold text-emerald-400 hover:underline">
                         Change Photo
                         <input
                           type="file"
@@ -260,7 +257,7 @@ export const EmployeeReportView: React.FC = () => {
                           setSelectedFile(null);
                           setPreviewUrl("");
                         }}
-                        className="text-xs text-red-500 hover:underline"
+                        className="text-xs text-red-400 hover:underline"
                       >
                         Remove
                       </button>
@@ -268,8 +265,8 @@ export const EmployeeReportView: React.FC = () => {
                   </div>
                 ) : (
                   <label className="cursor-pointer flex flex-col items-center justify-center py-6">
-                    <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    <UploadCloud className="h-10 w-10 text-slate-500 mb-2 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-semibold text-slate-200">
                       Click to upload or drag image here
                     </span>
                     <span className="text-xs text-slate-400 mt-1">PNG, JPG, WebP up to 10MB</span>
@@ -286,8 +283,8 @@ export const EmployeeReportView: React.FC = () => {
 
             {/* Location Input */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1">
-                <MapPin className="h-3.5 w-3.5 text-emerald-500" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center space-x-1">
+                <MapPin className="h-3.5 w-3.5 text-emerald-400" />
                 <span>2. Facility Location *</span>
               </label>
               <input
@@ -296,14 +293,14 @@ export const EmployeeReportView: React.FC = () => {
                 onChange={e => setLocation(e.target.value)}
                 placeholder="e.g., Electrical Room B2, Loading Dock A, Assembly Line 4"
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
             {/* Description Input */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1">
-                <FileText className="h-3.5 w-3.5 text-emerald-500" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center space-x-1">
+                <FileText className="h-3.5 w-3.5 text-emerald-400" />
                 <span>3. Observed Conditions & Details</span>
               </label>
               <textarea
@@ -311,14 +308,14 @@ export const EmployeeReportView: React.FC = () => {
                 onChange={e => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Describe what you observed (e.g., exposed live cables, missing grounding wire, water pooling)..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
             {/* Reporter Name */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1">
-                <User className="h-3.5 w-3.5 text-emerald-500" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center space-x-1">
+                <User className="h-3.5 w-3.5 text-emerald-400" />
                 <span>4. Reporter Name / Role</span>
               </label>
               <input
@@ -326,12 +323,12 @@ export const EmployeeReportView: React.FC = () => {
                 value={reporter}
                 onChange={e => setReporter(e.target.value)}
                 placeholder="e.g. Alex Rivera (Lead Technician)"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-950 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
             {errorMessage && (
-              <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-xs flex items-center space-x-2">
+              <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
                 <XCircle className="h-4 w-4 flex-shrink-0" />
                 <span>{errorMessage}</span>
               </div>
