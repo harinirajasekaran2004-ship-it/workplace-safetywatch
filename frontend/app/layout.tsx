@@ -13,6 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+      <head>
+        <link rel="stylesheet" href="/compiled_styles.css" />
+      </head>
       <body className="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-950">
         {children}
       </body>
