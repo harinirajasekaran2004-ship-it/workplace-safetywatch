@@ -16,6 +16,7 @@ def get_dashboard_statistics():
     return DashboardStats(**stats_data)
 
 @router.get("/safety-rules", response_model=List[Dict[str, Any]])
+@router.get("/rules", response_model=List[Dict[str, Any]])
 def get_safety_rules():
     """
     Returns the curated safety rules catalog used for compliance matching.
