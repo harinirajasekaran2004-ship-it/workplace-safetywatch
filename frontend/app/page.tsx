@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { EmployeeReportView } from "@/components/EmployeeReportView";
+import { ReporterIncidentsView } from "@/components/ReporterIncidentsView";
 import { ManagerDashboardView } from "@/components/ManagerDashboardView";
 import { StatsOverview } from "@/components/StatsOverview";
 import { SafetyRulesView } from "@/components/SafetyRulesView";
@@ -22,7 +23,7 @@ const DEFAULT_DEMO_REPORTER: User = {
 };
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"report" | "manager" | "analytics" | "rules" | "chat" | "profile">("report");
+  const [activeTab, setActiveTab] = useState<"report" | "manager" | "reporter_incidents" | "analytics" | "rules" | "chat" | "profile">("report");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(DEFAULT_DEMO_REPORTER);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
@@ -32,7 +33,8 @@ export default function Home() {
     try {
       const savedUser = localStorage.getItem("safetywatch_user");
       if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setCurrentUser(parsed);
       }
     } catch (e) {
       console.warn("Could not read local auth cache:", e);
@@ -88,7 +90,15 @@ export default function Home() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {activeTab === "report" && <EmployeeReportView />}
         {activeTab === "chat" && <SafetyChatbot userName={currentUser?.name || "Employee"} />}
+        
+        {/* Reporter's Personal Complaints Tracker */}
+        {activeTab === "reporter_incidents" && currentUser && (
+          <ReporterIncidentsView currentUser={currentUser} />
+        )}
+
+        {/* Safety Manager Operations Console */}
         {activeTab === "manager" && <ManagerDashboardView />}
+
         {activeTab === "analytics" && <StatsOverview />}
         {activeTab === "rules" && <SafetyRulesView />}
         {activeTab === "profile" && currentUser && (

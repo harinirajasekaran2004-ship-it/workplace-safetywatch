@@ -8,13 +8,14 @@ import {
   Bot,
   User as UserIcon,
   LogOut,
-  LogIn
+  LogIn,
+  CheckSquare
 } from "lucide-react";
 import { User } from "@/lib/api";
 
 interface NavbarProps {
-  activeTab: "report" | "manager" | "analytics" | "rules" | "chat" | "profile";
-  onTabChange: (tab: "report" | "manager" | "analytics" | "rules" | "chat" | "profile") => void;
+  activeTab: "report" | "manager" | "reporter_incidents" | "analytics" | "rules" | "chat" | "profile";
+  onTabChange: (tab: "report" | "manager" | "reporter_incidents" | "analytics" | "rules" | "chat" | "profile") => void;
   openIncidentsCount?: number;
   highRiskCount?: number;
   currentUser: User | null;
@@ -32,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout
 }) => {
   const isManager = currentUser?.role === "manager";
+  const isReporter = currentUser?.role === "employee";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
@@ -58,6 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Tab Navigation */}
         <nav className="hidden md:flex items-center space-x-1">
+          {/* Report Hazard */}
           <button
             onClick={() => onTabChange("report")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -70,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Report Hazard</span>
           </button>
 
-          {/* Safety Chatbot Tab (Especially for Reporters) */}
+          {/* Safety Chatbot (for Reporters) */}
           <button
             onClick={() => onTabChange("chat")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -83,23 +86,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Safety AI Chat</span>
           </button>
 
-          <button
-            onClick={() => onTabChange("manager")}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "manager"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                : "text-slate-300 hover:text-white hover:bg-slate-900"
-            }`}
-          >
-            <ClipboardList className="h-3.5 w-3.5" />
-            <span>Manager Portal</span>
-            {openIncidentsCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
-                {openIncidentsCount}
-              </span>
-            )}
-          </button>
+          {/* CONDITIONAL TAB: If Reporter, show "My Complaints"; If Manager, show "Manager Portal" */}
+          {isReporter && (
+            <button
+              onClick={() => onTabChange("reporter_incidents")}
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "reporter_incidents"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              <span>My Reported Hazards</span>
+            </button>
+          )}
 
+          {isManager && (
+            <button
+              onClick={() => onTabChange("manager")}
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "manager"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <ClipboardList className="h-3.5 w-3.5" />
+              <span>Manager Portal</span>
+              {openIncidentsCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                  {openIncidentsCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Analytics */}
           <button
             onClick={() => onTabChange("analytics")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -112,6 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Analytics & KPI</span>
           </button>
 
+          {/* Safety Rules */}
           <button
             onClick={() => onTabChange("rules")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -144,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <div className="text-left hidden lg:block">
                   <div className="text-xs font-bold text-white leading-none">{currentUser.name}</div>
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                  <span className={`text-[10px] uppercase font-bold ${isManager ? "text-blue-400" : "text-emerald-400"}`}>
                     {isManager ? "Manager" : "Reporter"}
                   </span>
                 </div>
@@ -153,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onLogout}
                 className="p-2 rounded-xl bg-slate-900 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 transition-colors"
-                title="Sign Out"
+                title="Sign Out / Switch Account"
               >
                 <LogOut className="h-4 w-4" />
               </button>
