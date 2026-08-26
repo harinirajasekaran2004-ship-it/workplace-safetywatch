@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: workplace-safetywatch-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: workplace-safetywatch
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
