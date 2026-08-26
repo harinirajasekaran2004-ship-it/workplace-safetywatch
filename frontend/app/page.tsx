@@ -35,6 +35,9 @@ export default function Home() {
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
         setCurrentUser(parsed);
+        if (parsed.role === "manager") {
+          setActiveTab("manager");
+        }
       }
     } catch (e) {
       console.warn("Could not read local auth cache:", e);

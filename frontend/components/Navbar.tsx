@@ -33,13 +33,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout
 }) => {
   const isManager = currentUser?.role === "manager";
-  const isReporter = currentUser?.role === "employee";
+  const isReporter = currentUser?.role === "employee" || !currentUser;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onTabChange("report")}>
+        <div
+          className="flex items-center space-x-3 cursor-pointer"
+          onClick={() => onTabChange(isManager ? "manager" : "report")}
+        >
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
             <ShieldAlert className="h-6 w-6" />
           </div>
@@ -58,69 +61,70 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation - STRICT ROLE SEPARATION */}
         <nav className="hidden md:flex items-center space-x-1">
-          {/* Report Hazard */}
-          <button
-            onClick={() => onTabChange("report")}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "report"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-slate-300 hover:text-white hover:bg-slate-900"
-            }`}
-          >
-            <AlertTriangle className="h-3.5 w-3.5" />
-            <span>Report Hazard</span>
-          </button>
-
-          {/* Safety Chatbot (for Reporters) */}
-          <button
-            onClick={() => onTabChange("chat")}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "chat"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-slate-300 hover:text-white hover:bg-slate-900"
-            }`}
-          >
-            <Bot className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Safety AI Chat</span>
-          </button>
-
-          {/* CONDITIONAL TAB: If Reporter, show "My Complaints"; If Manager, show "Manager Portal" */}
+          {/* REPORTER ONLY TABS */}
           {isReporter && (
-            <button
-              onClick={() => onTabChange("reporter_incidents")}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === "reporter_incidents"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                  : "text-slate-300 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <CheckSquare className="h-3.5 w-3.5" />
-              <span>My Reported Hazards</span>
-            </button>
+            <>
+              <button
+                onClick={() => onTabChange("report")}
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === "report"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-300 hover:text-white hover:bg-slate-900"
+                }`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <span>Report Hazard</span>
+              </button>
+
+              <button
+                onClick={() => onTabChange("chat")}
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === "chat"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-300 hover:text-white hover:bg-slate-900"
+                }`}
+              >
+                <Bot className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Safety AI Chat</span>
+              </button>
+
+              <button
+                onClick={() => onTabChange("reporter_incidents")}
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === "reporter_incidents"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "text-slate-300 hover:text-white hover:bg-slate-900"
+                }`}
+              >
+                <CheckSquare className="h-3.5 w-3.5" />
+                <span>My Reported Hazards</span>
+              </button>
+            </>
           )}
 
+          {/* MANAGER ONLY TABS */}
           {isManager && (
             <button
               onClick={() => onTabChange("manager")}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === "manager"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
               <ClipboardList className="h-3.5 w-3.5" />
-              <span>Manager Portal</span>
+              <span>Manager Operations Console</span>
               {openIncidentsCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
                   {openIncidentsCount}
                 </span>
               )}
             </button>
           )}
 
-          {/* Analytics */}
+          {/* SHARED TABS: Analytics & Safety Rules */}
           <button
             onClick={() => onTabChange("analytics")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -133,7 +137,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Analytics & KPI</span>
           </button>
 
-          {/* Safety Rules */}
           <button
             onClick={() => onTabChange("rules")}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -155,7 +158,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => onTabChange("profile")}
                 className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all ${
                   activeTab === "profile"
-                    ? "bg-slate-800 border-emerald-500/50 text-white"
+                    ? isManager
+                      ? "bg-slate-800 border-blue-500/50 text-white"
+                      : "bg-slate-800 border-emerald-500/50 text-white"
                     : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
                 }`}
               >
