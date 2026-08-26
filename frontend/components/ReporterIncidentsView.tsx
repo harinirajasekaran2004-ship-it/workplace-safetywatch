@@ -226,14 +226,12 @@ export const ReporterIncidentsView: React.FC<ReporterIncidentsViewProps> = ({ cu
                     </td>
 
                     <td className="px-5 py-4 text-slate-300">
-                      {inc.assignee_name ? (
-                        <div className="flex items-center space-x-1.5">
-                          <User className="h-3.5 w-3.5 text-blue-400" />
-                          <span className="font-semibold text-white">{inc.assignee_name}</span>
-                        </div>
-                      ) : (
-                        <span className="italic text-slate-500">Pending Assignment</span>
-                      )}
+                      <div className="flex items-center space-x-1.5">
+                        <User className="h-3.5 w-3.5 text-blue-400" />
+                        <span className="font-semibold text-white">
+                          {inc.assignee_name || "Harini R (Safety Lead)"}
+                        </span>
+                      </div>
                     </td>
 
                     <td className="px-5 py-4 text-right">

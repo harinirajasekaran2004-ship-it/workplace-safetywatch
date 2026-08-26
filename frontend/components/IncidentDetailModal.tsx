@@ -21,6 +21,7 @@ interface IncidentDetailModalProps {
 }
 
 const SAMPLE_ASSIGNEES = [
+  "Harini R (Safety Lead & EHS Manager)",
   "Sarah Connor (Safety Lead)",
   "Fox Mulder (HazMat Officer)",
   "John Doe (Senior Electrician)",
@@ -76,7 +77,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                 {incident.hazard_detected ? incident.hazard_type : "No Hazard Incident"}
               </h2>
               <p className="text-xs text-slate-400">
-                {incident.location} • Reported on {new Date(incident.created_at).toLocaleString()}
+                {incident.location} • Reported by <strong className="text-slate-200">{incident.reporter_name || "Employee"}</strong> to <strong className="text-emerald-400">Harini R (Safety Lead)</strong>
               </p>
             </div>
           </div>

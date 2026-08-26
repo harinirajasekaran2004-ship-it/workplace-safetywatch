@@ -44,7 +44,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleQuickLogin = async (asRole: "employee" | "manager") => {
     setLoading(true);
     setErrorMsg("");
-    const targetEmail = asRole === "manager" ? "sarah.connor@facility.internal" : "alex.rivera@facility.internal";
+    const targetEmail = asRole === "manager" ? "harinirajasekaran2004@gmail.com" : "alex.rivera@facility.internal";
     try {
       const res = await loginUser(targetEmail, "password123");
       onSuccess(res.user);
@@ -135,7 +135,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-blue-400 text-left transition-all hover:border-blue-500/50 flex flex-col"
             >
               <span>🛡️ Manager Demo</span>
-              <span className="text-[10px] text-slate-400 font-normal">Sarah Connor (Safety Lead)</span>
+              <span className="text-[10px] text-slate-400 font-normal">Harini R (Safety Lead)</span>
             </button>
           </div>
         </div>

@@ -24,6 +24,16 @@ class DataStore:
 
     def _seed_sample_users(self):
         """Seed default Reporter and Manager accounts."""
+        u0 = {
+            "id": "usr-mgr-harini",
+            "name": "Harini R",
+            "email": "harinirajasekaran2004@gmail.com",
+            "password": "password123",
+            "role": "manager",
+            "department": "EHS Safety & Compliance Command",
+            "facility_location": "Central Safety Control Office",
+            "created_at": "2026-08-25T00:00:00Z"
+        }
         u1 = {
             "id": "usr-emp-1",
             "name": "Alex Rivera",
@@ -54,6 +64,7 @@ class DataStore:
             "facility_location": "South Loading Dock Gate 4",
             "created_at": "2026-08-25T00:00:00Z"
         }
+        self.users[u0["id"]] = u0
         self.users[u1["id"]] = u1
         self.users[u2["id"]] = u2
         self.users[u3["id"]] = u3
