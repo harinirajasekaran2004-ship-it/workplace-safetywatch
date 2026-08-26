@@ -13,6 +13,8 @@ class GroqService:
     def __init__(self):
         self.api_key = settings.GROQ_API_KEY
         self.client: Optional[Groq] = None
+        self.text_model = settings.GROQ_TEXT_MODEL
+        self.vision_model = settings.GROQ_VISION_MODEL
         if self.api_key:
             try:
                 self.client = Groq(api_key=self.api_key)
@@ -39,7 +41,7 @@ class GroqService:
             logger.info("Groq API key not set or client unavailable; using safety intelligence heuristic engine.")
             return {}
 
-        chosen_model = model or (settings.GROQ_VISION_MODEL if image_base64 else settings.GROQ_TEXT_MODEL)
+        chosen_model = model or (self.vision_model if image_base64 else self.text_model)
 
         messages = [
             {"role": "system", "content": system_prompt + "\nYou must return ONLY valid, parseable JSON. Do not include markdown ticks or text outside the JSON object."}
@@ -79,6 +81,38 @@ class GroqService:
             return json.loads(raw_content)
         except Exception as e:
             logger.error(f"Groq API call error ({chosen_model}): {e}")
+            raise e
+
+    def generate_text_response(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: float = 0.2,
+        max_tokens: int = 1024
+    ) -> str:
+        """
+        Calls Groq API for conversational text chat.
+        """
+        if not self.is_available():
+            return ""
+
+        chosen_model = model or self.text_model
+        try:
+            chat_completion = self.client.chat.completions.create(
+                messages=messages,
+                model=chosen_model,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            raw = chat_completion.choices[0].message.content.strip()
+            # Clean <think> tags completely
+            if "</think>" in raw:
+                cleaned = raw.split("</think>")[-1].strip()
+            else:
+                cleaned = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", raw).strip()
+            return cleaned or raw
+        except Exception as e:
+            logger.error(f"Groq chat text completion error ({chosen_model}): {e}")
             raise e
 
 groq_service = GroqService()

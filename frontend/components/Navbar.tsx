@@ -1,94 +1,172 @@
 import React from "react";
-import { Shield, AlertTriangle, Users, BarChart3, BookOpen } from "lucide-react";
+import {
+  ShieldAlert,
+  AlertTriangle,
+  ClipboardList,
+  BarChart3,
+  BookOpen,
+  Bot,
+  User as UserIcon,
+  LogOut,
+  LogIn
+} from "lucide-react";
+import { User } from "@/lib/api";
 
 interface NavbarProps {
-  activeTab: "employee" | "manager" | "stats" | "rules";
-  setActiveTab: (tab: "employee" | "manager" | "stats" | "rules") => void;
-  openCount?: number;
+  activeTab: "report" | "manager" | "analytics" | "rules" | "chat" | "profile";
+  onTabChange: (tab: "report" | "manager" | "analytics" | "rules" | "chat" | "profile") => void;
+  openIncidentsCount?: number;
   highRiskCount?: number;
+  currentUser: User | null;
+  onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
-  setActiveTab,
-  openCount = 0,
+  onTabChange,
+  openIncidentsCount = 0,
   highRiskCount = 0,
+  currentUser,
+  onOpenAuth,
+  onLogout
 }) => {
+  const isManager = currentUser?.role === "manager";
+
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Title */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("employee")}>
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Shield className="h-6 w-6 text-slate-950 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg tracking-tight text-white">Workplace SafetyWatch</span>
-                <span className="text-[10px] uppercase font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
-                  Multi-Agent MVP
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">AI Hazard Detection & Incident Management</p>
-            </div>
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Brand */}
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onTabChange("report")}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/20">
+            <ShieldAlert className="h-6 w-6" />
           </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="font-extrabold text-base tracking-tight text-white">
+                Workplace SafetyWatch
+              </span>
+              <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
+                MULTI-AGENT MVP
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 hidden sm:block">
+              AI Hazard Detection, Incident Management & Safety Copilot
+            </p>
+          </div>
+        </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center space-x-1 sm:space-x-2">
-            <button
-              onClick={() => setActiveTab("employee")}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "employee"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span>Report Hazard</span>
-            </button>
+        {/* Tab Navigation */}
+        <nav className="hidden md:flex items-center space-x-1">
+          <button
+            onClick={() => onTabChange("report")}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "report"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                : "text-slate-300 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>Report Hazard</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab("manager")}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all relative ${
-                activeTab === "manager"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              <span>Manager Portal</span>
-              {openCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-bold text-xs rounded-full">
-                  {openCount}
-                </span>
-              )}
-            </button>
+          {/* Safety Chatbot Tab (Especially for Reporters) */}
+          <button
+            onClick={() => onTabChange("chat")}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "chat"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                : "text-slate-300 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <Bot className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Safety AI Chat</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab("stats")}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "stats"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Analytics & KPI</span>
-            </button>
+          <button
+            onClick={() => onTabChange("manager")}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "manager"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                : "text-slate-300 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <ClipboardList className="h-3.5 w-3.5" />
+            <span>Manager Portal</span>
+            {openIncidentsCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                {openIncidentsCount}
+              </span>
+            )}
+          </button>
 
+          <button
+            onClick={() => onTabChange("analytics")}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "analytics"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                : "text-slate-300 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            <span>Analytics & KPI</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange("rules")}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "rules"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                : "text-slate-300 hover:text-white hover:bg-slate-900"
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Safety Rules</span>
+          </button>
+        </nav>
+
+        {/* User Auth & Profile Actions */}
+        <div className="flex items-center space-x-2">
+          {currentUser ? (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onTabChange("profile")}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all ${
+                  activeTab === "profile"
+                    ? "bg-slate-800 border-emerald-500/50 text-white"
+                    : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                <div className={`h-6 w-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${
+                  isManager ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
+                }`}>
+                  {currentUser.name[0]}
+                </div>
+                <div className="text-left hidden lg:block">
+                  <div className="text-xs font-bold text-white leading-none">{currentUser.name}</div>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    {isManager ? "Manager" : "Reporter"}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-xl bg-slate-900 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => setActiveTab("rules")}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "rules"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
+              onClick={onOpenAuth}
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all"
             >
-              <BookOpen className="h-4 w-4" />
-              <span>Safety Rules</span>
+              <LogIn className="h-3.5 w-3.5" />
+              <span>Sign In / Register</span>
             </button>
-          </nav>
+          )}
         </div>
       </div>
     </header>

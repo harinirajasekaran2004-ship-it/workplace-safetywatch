@@ -8,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.api.incidents import router as incidents_router
 from app.api.dashboard import router as dashboard_router
+from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 
 # Configure Logging
 logging.basicConfig(
@@ -26,7 +28,7 @@ if settings.LANGCHAIN_API_KEY:
 
 app = FastAPI(
     title="Workplace SafetyWatch API",
-    description="Multi-Agent Workplace Hazard Detection and Incident Management System",
+    description="Multi-Agent Workplace Hazard Detection, Incident Management & Safety AI System",
     version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -35,7 +37,7 @@ app = FastAPI(
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for development & Vercel/Railway previews
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +48,8 @@ os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 # Include Routers
+app.include_router(auth_router)
+app.include_router(chat_router)
 app.include_router(incidents_router)
 app.include_router(dashboard_router)
 
@@ -57,6 +61,9 @@ def root():
         "status": "operational",
         "endpoints": {
             "docs": "/docs",
+            "auth_register": "/api/auth/register",
+            "auth_login": "/api/auth/login",
+            "safety_chat": "/api/chat/safety-assistant",
             "incidents_analyze": "/api/incidents/analyze",
             "incidents_list": "/api/incidents",
             "dashboard_stats": "/api/dashboard/stats",

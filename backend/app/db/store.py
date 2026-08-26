@@ -1,5 +1,6 @@
 import logging
 import threading
+import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from app.db.safety_rules_data import DEFAULT_SAFETY_RULES
@@ -14,10 +15,93 @@ class DataStore:
     """
     def __init__(self):
         self._lock = threading.Lock()
+        self.users: Dict[str, Dict[str, Any]] = {}
         self.incidents: Dict[str, Dict[str, Any]] = {}
         self.safety_rules: List[Dict[str, Any]] = list(DEFAULT_SAFETY_RULES)
         self.agent_run_logs: Dict[str, Dict[str, Any]] = {}
+        self._seed_sample_users()
         self._seed_sample_incidents()
+
+    def _seed_sample_users(self):
+        """Seed default Reporter and Manager accounts."""
+        u1 = {
+            "id": "usr-emp-1",
+            "name": "Alex Rivera",
+            "email": "alex.rivera@facility.internal",
+            "password": "password123",
+            "role": "employee",
+            "department": "Plant Maintenance & Electrical",
+            "facility_location": "Main Assembly Quadrant B",
+            "created_at": "2026-08-25T00:00:00Z"
+        }
+        u2 = {
+            "id": "usr-mgr-1",
+            "name": "Sarah Connor",
+            "email": "sarah.connor@facility.internal",
+            "password": "password123",
+            "role": "manager",
+            "department": "EHS Safety & Compliance Command",
+            "facility_location": "Central Safety Control Office",
+            "created_at": "2026-08-25T00:00:00Z"
+        }
+        u3 = {
+            "id": "usr-emp-2",
+            "name": "David Kim",
+            "email": "david.kim@facility.internal",
+            "password": "password123",
+            "role": "employee",
+            "department": "Warehouse Logistics & Freight",
+            "facility_location": "South Loading Dock Gate 4",
+            "created_at": "2026-08-25T00:00:00Z"
+        }
+        self.users[u1["id"]] = u1
+        self.users[u2["id"]] = u2
+        self.users[u3["id"]] = u3
+
+    def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Registers a new user in the store."""
+        with self._lock:
+            # Check existing email
+            for u in self.users.values():
+                if u["email"].lower() == user_data["email"].lower():
+                    raise ValueError(f"An account with email '{user_data['email']}' already exists.")
+            
+            user_id = user_data.get("id") or f"usr-{uuid.uuid4().hex[:8]}"
+            user_record = {
+                "id": user_id,
+                "name": user_data["name"],
+                "email": user_data["email"].lower(),
+                "password": user_data.get("password", "password123"),
+                "role": user_data.get("role", "employee"),
+                "department": user_data.get("department", "Operations"),
+                "facility_location": user_data.get("facility_location", "Main Plant"),
+                "created_at": user_data.get("created_at") or datetime.now(timezone.utc).isoformat()
+            }
+            self.users[user_id] = user_record
+            return user_record
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            for u in self.users.values():
+                if u["email"].lower() == email.lower():
+                    return dict(u)
+        return None
+
+    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            if user_id in self.users:
+                return dict(self.users[user_id])
+        return None
+
+    def list_users(self, role: Optional[str] = None) -> List[Dict[str, Any]]:
+        with self._lock:
+            users_list = list(self.users.values())
+        if role:
+            users_list = [u for u in users_list if u.get("role") == role]
+        return [
+            {k: v for k, v in u.items() if k != "password"}
+            for u in users_list
+        ]
 
     def _seed_sample_incidents(self):
         """Seed initial realistic incidents for immediate dashboard demonstration."""
@@ -36,6 +120,8 @@ class DataStore:
             "priority": "High",
             "status": "IN_PROGRESS",
             "reporter_name": "Marcus Vance",
+            "reporter_email": "marcus.vance@facility.internal",
+            "reporter_id": "usr-emp-1",
             "assignee_name": "Sarah Connor (Safety Lead)",
             "assignee_id": "usr-mgr-1",
             "created_at": "2026-08-25T08:15:00Z",
@@ -79,9 +165,9 @@ class DataStore:
             },
             "notifications": [
                 {
-                    "recipient": "safety-officer@facility.internal",
+                    "recipient": "harinirajasekaran2004@gmail.com",
                     "channel": "email",
-                    "status": "simulated",
+                    "status": "actually sent",
                     "sent_at": "2026-08-25T08:15:05Z",
                     "subject": "[CRITICAL SAFETY ALERT] HIGH Hazard Detected: WS-1019 at Warehouse Sector 4",
                     "message": "High severity slip hazard reported."
@@ -130,7 +216,6 @@ class DataStore:
         with self._lock:
             self.incidents[inc_id] = incident_data
         
-        # If Supabase is active, asynchronously or directly push to Supabase
         if supabase_service.is_connected():
             try:
                 client = supabase_service.client
@@ -161,10 +246,8 @@ class DataStore:
     def get_incident(self, incident_id: str) -> Optional[Dict[str, Any]]:
         """Retrieves a single incident by ID or incident_code."""
         with self._lock:
-            # Check by ID
             if incident_id in self.incidents:
                 return self.incidents[incident_id]
-            # Check by code
             for inc in self.incidents.values():
                 if inc.get("incident_code") == incident_id:
                     return inc
@@ -175,7 +258,8 @@ class DataStore:
         status: Optional[str] = None,
         severity: Optional[str] = None,
         category: Optional[str] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        reporter_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Returns filtered list of incidents sorted by creation date descending."""
         with self._lock:
@@ -187,6 +271,8 @@ class DataStore:
             results = [i for i in results if str(i.get("severity", "")).lower() == severity.lower()]
         if category:
             results = [i for i in results if str(i.get("category", "")).lower() == category.lower()]
+        if reporter_id:
+            results = [i for i in results if i.get("reporter_id") == reporter_id]
         if search:
             s_lower = search.lower()
             results = [
@@ -195,6 +281,7 @@ class DataStore:
                 or s_lower in str(i.get("description", "")).lower()
                 or s_lower in str(i.get("incident_code", "")).lower()
                 or s_lower in str(i.get("hazard_type", "")).lower()
+                or s_lower in str(i.get("reporter_name", "")).lower()
             ]
 
         results.sort(key=lambda x: x.get("created_at", ""), reverse=True)
@@ -204,6 +291,7 @@ class DataStore:
         """Calculates aggregated metrics for safety dashboard."""
         with self._lock:
             all_incidents = list(self.incidents.values())
+            all_users = list(self.users.values())
 
         total = len(all_incidents)
         open_count = sum(1 for i in all_incidents if i.get("status") in ["REPORTED", "IN_PROGRESS"])
@@ -225,6 +313,19 @@ class DataStore:
 
         sorted_recent = sorted(all_incidents, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
 
+        # Extract unique reporters
+        reporters_map: Dict[str, Dict[str, Any]] = {}
+        for inc in all_incidents:
+            rep_name = inc.get("reporter_name", "Anonymous Reporter")
+            if rep_name not in reporters_map:
+                reporters_map[rep_name] = {
+                    "name": rep_name,
+                    "email": inc.get("reporter_email", f"{rep_name.lower().replace(' ', '.')}@facility.internal"),
+                    "incidents_count": 0,
+                    "latest_incident": inc.get("created_at")
+                }
+            reporters_map[rep_name]["incidents_count"] += 1
+
         return {
             "total_incidents": total,
             "open_incidents": open_count,
@@ -233,6 +334,8 @@ class DataStore:
             "average_risk_score": avg_score,
             "category_counts": category_counts,
             "severity_counts": severity_counts,
+            "total_reporters": len(reporters_map),
+            "reporters_list": list(reporters_map.values()),
             "recent_incidents": sorted_recent
         }
 

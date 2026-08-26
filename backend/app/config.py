@@ -34,8 +34,8 @@ class Settings(BaseSettings):
 
     # Groq LLM
     GROQ_API_KEY: str = Field(default="", description="Groq API key")
-    GROQ_VISION_MODEL: str = "llama-3.2-11b-vision-preview"
-    GROQ_TEXT_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_VISION_MODEL: str = "qwen/qwen3.6-27b"
+    GROQ_TEXT_MODEL: str = "qwen/qwen3.6-27b"
 
     # Supabase
     SUPABASE_URL: str = Field(default="", description="Supabase project URL")
