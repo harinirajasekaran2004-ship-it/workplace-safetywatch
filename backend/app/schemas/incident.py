@@ -165,6 +165,14 @@ class IncidentUpdateRequest(BaseModel):
     resolution_notes: Optional[str] = None
     updated_by: Optional[str] = "Manager"
 
+class ReporterSummary(BaseModel):
+    name: str
+    email: str
+    incidents_count: int = 0
+    department: Optional[str] = "Operations & Facility"
+    facility_location: Optional[str] = "Main Production Plant"
+    latest_incident: Optional[str] = None
+
 class DashboardStats(BaseModel):
     total_incidents: int = 0
     open_incidents: int = 0
@@ -173,6 +181,8 @@ class DashboardStats(BaseModel):
     average_risk_score: float = 0.0
     category_counts: Dict[str, int] = {}
     severity_counts: Dict[str, int] = {}
+    total_reporters: int = 0
+    reporters_list: List[ReporterSummary] = []
     recent_incidents: List[IncidentDetail] = []
 
 class ProgressResponse(BaseModel):
